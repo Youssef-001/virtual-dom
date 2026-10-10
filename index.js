@@ -69,13 +69,20 @@ let patchTypes = {
 }
 
 
-function check_props(old_props, new_props){}
-
+function check_props(old_props, new_props)
+{
+    
+}
 
 function diff(oldTree, newTree)
 {
 
 let patches = []
+
+const count = Math.max(
+  oldNode.children.length,
+  newNode.children.length
+);
 
 if (oldTree === undefined && newTree !== undefined)
 {
@@ -86,14 +93,55 @@ else if (oldTree !== undefined && newTree === undefined)
 {
     patches.push({type: PROPS.REMOVE, path: [0], value: undefined})
 }
+let current_path = [0]
 
 
 
-const count = Math.max(
-  oldTree.children.length,
-  newTree.children.length
-);
+for (let i = 0; i<count; i++)
+{
+    let oldTreeChild = oldTree['children'][i]
+    let newTreeChild = newTree['children'][i]
+    current_path.push(i)
+    if (oldTreeChild !== undefined && newTreeChild !== undefined)
+    {
+        if (typeof oldTreeChild === 'object' && typeof newTreeChild === 'string' || 
+            typeof newTreeChild === 'object' && typeof oldTreeChild === 'string'
+        )
 
+        {
+            patches.push({type: PROPS.REPLACE, path: current_path, value: newTreeChild})
+        }
+    }
+
+    else if (oldTreeChild !== undefined && newTreeChild === undefined)
+    {
+        patches.push({type: PROPS.REMOVE, path:current_path, value: undefined})
+    }
+
+    else if (oldTreeChild === undefined && newTreeChild !== undefined)
+    {
+        patches.push({type: PROPS.ADD, path:current_path, value: newTreeChild})
+    }
+    //  both are nodes and both exists.
+    else {
+
+        if (oldTreeChild['tag'] !== newTreeChild['tag'])
+        {
+            patches.push({type: PROPS.REPLACE, path:current_path, value: newTreeChild})
+        }
+
+        else if (oldTreeChild['tag'] === newTreeChild['tag'])
+        {
+            // array of props changes.
+            let props_difference = check_props(oldTreeChild['props'], newTreeChild['props'])
+            diff(oldTreeChild, newTreeChild)
+
+
+        }
+
+    }
+}
+    
 
 
 }
