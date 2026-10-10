@@ -69,9 +69,38 @@ let patchTypes = {
 }
 
 
-function check_props(old_props, new_props)
+function props_diff(old_props, new_props, path)
 {
-    
+
+    let patches = []
+    let remove_props = {}
+    let set_props = {}
+
+for (const [key, value] of Object.entries(new_props)) {
+  if (Object.hasOwn(old_props, key))
+  {
+    if (old_props[key] != new_props[key])
+    {
+        // patches.push({type: PROPS.PROPS, path: path, value: {id: key, value: value}})
+        set_props[new_props[key]] = new_props[value]
+        
+    }
+  }
+
+  else {
+    set_props[new_props[key]] = new_props[value]]
+  }
+}
+
+for (const [key, value] of Object.entries(old_props)) {
+  if (!Object.hasOwn(new_props, key))
+  {
+    remove_props[old_props[key]] = old_props[value]
+  }
+}
+
+return {type: PROPS.PROPS, path: path, set: set_props, remove: remove_props}
+
 }
 
 function diff(oldTree, newTree)
@@ -133,7 +162,7 @@ for (let i = 0; i<count; i++)
         else if (oldTreeChild['tag'] === newTreeChild['tag'])
         {
             // array of props changes.
-            let props_difference = check_props(oldTreeChild['props'], newTreeChild['props'])
+            let props_difference = props_diff(oldTreeChild['props'], newTreeChild['props'])
             diff(oldTreeChild, newTreeChild)
 
 
