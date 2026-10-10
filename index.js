@@ -99,7 +99,12 @@ for (const [key, value] of Object.entries(old_props)) {
   }
 }
 
-return {type: PROPS.PROPS, path: path, set: set_props, remove: remove_props}
+if (set_props.length !== 0 || remove_props.length !== 0)
+{
+return {type: PROPS.PROPS, path: path, set: set_props, remove: remove_props}}
+
+else 
+    return undefined
 
 }
 
@@ -163,6 +168,10 @@ for (let i = 0; i<count; i++)
         {
             // array of props changes.
             let props_difference = props_diff(oldTreeChild['props'], newTreeChild['props'])
+            if (props_difference !== undefined)
+            {
+                patches.push(props_difference)
+            }
             diff(oldTreeChild, newTreeChild)
 
 
