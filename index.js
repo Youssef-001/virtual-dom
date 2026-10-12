@@ -81,14 +81,13 @@ for (const [key, value] of Object.entries(new_props)) {
   {
     if (old_props[key] != new_props[key])
     {
-        // patches.push({type: PROPS.PROPS, path: path, value: {id: key, value: value}})
         set_props[new_props[key]] = new_props[value]
         
     }
   }
 
   else {
-    set_props[new_props[key]] = new_props[value]]
+    set_props[new_props[key]] = new_props[value]
   }
 }
 
@@ -99,35 +98,35 @@ for (const [key, value] of Object.entries(old_props)) {
   }
 }
 
-if (set_props.length !== 0 || remove_props.length !== 0)
+if (Object.keys(set_props).length !== 0 || Object.keys(remove_props).length !== 0)
 {
-return {type: PROPS.PROPS, path: path, set: set_props, remove: remove_props}}
+return {type: patchTypes.PROPS, path: path, set: set_props, remove: remove_props}}
 
 else 
     return undefined
 
 }
-
-function diff(oldTree, newTree)
-{
-
 let patches = []
 
+function diff(oldTree, newTree, current_path=[])
+{
+
+
 const count = Math.max(
-  oldNode.children.length,
-  newNode.children.length
+  oldTree.children.length,
+  newTree.children.length
 );
 
 if (oldTree === undefined && newTree !== undefined)
 {
-    patches.push({type: PROPS.ADD, path: [0], value: newTree})
+    patches.push({type: patchTypes.ADD, path: [0], value: newTree})
 }
 
 else if (oldTree !== undefined && newTree === undefined)
 {
-    patches.push({type: PROPS.REMOVE, path: [0], value: undefined})
+    patches.push({type: patchTypes.REMOVE, path: [0], value: undefined})
 }
-let current_path = [0]
+// let current_path = [0]
 
 
 
@@ -136,6 +135,7 @@ for (let i = 0; i<count; i++)
     let oldTreeChild = oldTree['children'][i]
     let newTreeChild = newTree['children'][i]
     current_path.push(i)
+    
     if (oldTreeChild !== undefined && newTreeChild !== undefined)
     {
         if (typeof oldTreeChild === 'object' && typeof newTreeChild === 'string' || 
@@ -143,25 +143,36 @@ for (let i = 0; i<count; i++)
         )
 
         {
-            patches.push({type: PROPS.REPLACE, path: current_path, value: newTreeChild})
+            patches.push({type: patchTypes.REPLACE, path: current_path, value: newTreeChild})
+        }
+
+        if (typeof oldTreeChild === 'string' && typeof newTreeChild === 'string')
+        {
+            if (oldTreeChild != newTreeChild)
+            {
+            patches.push({type: patchTypes.REPLACE, path: current_path, value: newTreeChild})
+        continue}
+            else {current_path.pop()
+                continue}
         }
     }
 
-    else if (oldTreeChild !== undefined && newTreeChild === undefined)
+    if (oldTreeChild !== undefined && newTreeChild === undefined)
     {
-        patches.push({type: PROPS.REMOVE, path:current_path, value: undefined})
+        patches.push({type: patchTypes.REMOVE, path:current_path, value: undefined})
+        continue
     }
 
-    else if (oldTreeChild === undefined && newTreeChild !== undefined)
+    if (oldTreeChild === undefined && newTreeChild !== undefined)
     {
-        patches.push({type: PROPS.ADD, path:current_path, value: newTreeChild})
+        patches.push({type: patchTypes.ADD, path:current_path, value: newTreeChild})
+        continue
     }
     //  both are nodes and both exists.
-    else {
 
         if (oldTreeChild['tag'] !== newTreeChild['tag'])
         {
-            patches.push({type: PROPS.REPLACE, path:current_path, value: newTreeChild})
+            patches.push({type: patchTypes.REPLACE, path:current_path, value: newTreeChild})
         }
 
         else if (oldTreeChild['tag'] === newTreeChild['tag'])
@@ -172,15 +183,16 @@ for (let i = 0; i<count; i++)
             {
                 patches.push(props_difference)
             }
-            diff(oldTreeChild, newTreeChild)
+            // current_path.push(i)
+            diff(oldTreeChild, newTreeChild, current_path)
 
-
+            
         }
 
-    }
+ 
 }
-    
-
+// current_path.pop()
+return patches;
 
 }
 
@@ -197,5 +209,40 @@ out = h("div", { id: "greeting" }, [
 ])
 
 
+tree1 = h("div", {}, [
+    {tag: "span", props: {}, children:[]},
+    {tag: "p", props: {}, children: []}
+])
+
+
+
+tree2 = h("div", {}, [
+    {tag: "span", props: {}, children:[]},
+    {tag: "p", props: {}, children: []},
+    {tag: "div", props:{}, children: []}
+])
+
+
+const tree3 = h("div", {}, [
+    { tag: "span", props: {}, children: ["Test"] },
+    { tag: "span", props: {}, children: ["Hello", "test"] }
+]);
+
+const tree4 = h("div", {}, [
+    { tag: "span", props: {}, children: ["Test"] },
+    { tag: "span", props: {}, children: ["Hii", "test"] }
+]);
+
+const tree5 = h("div", {}, [
+    { tag: "span", props: {}, children: ["Test"] },
+    { tag: "span", props: {}, children: ["Hello", "/test"] }
+]);
+
+const tree6 = h("div", {}, [
+    { tag: "span", props: {}, children: ["Hello", "/test"] }
+]);
 console.log(out)
 console.log(VirtualNodeToDom(out))
+
+
+console.log(diff(tree5, tree6));
