@@ -202,8 +202,62 @@ return patches;
 }
 
 
+function apply_patches(patches, tree)
+{
+    patches.forEach((patch) => {
+        switch (patch.type) {
+            case patchTypes.REPLACE:
+                apply_replace(tree, patch)
+                break;
+            
+            case patchTypes.ADD:
+                apply_add(tree, patch)
+                break;
+            case patchTypes.REMOVE:
+                apply_remove(tree, patch)
+                break;
+            case patchTypes.PROPS:
+                apply_props(tree, patch)
+        }
+        
+        
+    })
+}
 
+function apply_replace(tree, patch)
+{
+  if (patch.path.length == 0) return;
+  let current_tree = tree;
 
+    for (let i = 0; i < patch.path.length-1; i++)
+    {
+        current_tree = current_tree.children[patch.path[i]]
+
+        if (i == patch.path.length - 2)
+        {
+            console.log(current_tree)
+            current_tree.children[patch.path[i+1]] = patch.value
+        }
+
+    }
+
+}
+
+function apply_add(tree, patch)
+{
+      let current_tree = tree;
+
+    for (let i = 0; i < patch.path.length-1; i++)
+    {
+        current_tree = current_tree.children[patch.path[i]]
+
+        if (i == patch.path.length - 2)
+        {
+            console.log(current_tree)
+            current_tree.children.push(patch.value)
+        }
+
+}}
 
 
 out = h("div", { id: "greeting" }, [
@@ -264,5 +318,8 @@ const tree8 = h("div", {}, [
 console.log(out)
 console.log(VirtualNodeToDom(out))
 
+patchess = diff(tree5,tree6);
+console.log(patchess);
 
-console.log(diff(tree7, tree8));
+
+apply_patches(patches, tree5);
