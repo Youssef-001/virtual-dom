@@ -1,9 +1,7 @@
-h1 = document.createElement("h1");
 
-div = document.getElementById("app");
+app = document.getElementById("app");
 
-h1.innerText = "hello world";
-div.appendChild(h1);
+
 
 function h(tag, props, children) {
   let object = {};
@@ -91,13 +89,32 @@ function props_diff(old_props, new_props, path) {
 let patches = [];
 
 function diff(oldTree, newTree, current_path = []) {
-  const count = Math.max(oldTree.children.length, newTree.children.length);
-
   if (oldTree === undefined && newTree !== undefined) {
     patches.push({ type: patchTypes.ADD, path: [0], value: newTree });
   } else if (oldTree !== undefined && newTree === undefined) {
     patches.push({ type: patchTypes.REMOVE, path: [0], value: undefined });
   }
+
+  if (oldTree.tag !== newTree.tag) {
+    patches.push({
+      type: patchTypes.REPLACE,
+      path: [...current_path],
+      value: newTree,
+    });
+    current_path.pop();
+    return patches;
+  }
+
+  let props_difference = props_diff(
+    oldTree["props"],
+    newTree["props"],
+    current_path,
+  );
+  if (props_difference !== undefined) {
+    patches.push(props_difference);
+  }
+
+  const count = Math.max(oldTree.children.length, newTree.children.length);
 
   for (let i = 0; i < count; i++) {
     let oldTreeChild = oldTree["children"][i];
@@ -187,41 +204,69 @@ function diff(oldTree, newTree, current_path = []) {
 
 function apply_patches(patches, tree) {
   patches.forEach((patch) => {
-    apply_change(tree, patch, patch.type)
+    apply_change(tree, patch, patch.type);
   });
 
   return tree;
 }
 
+function apply_change(tree, patch, action) {
+  let parent = tree;
 
+  let isActionOnRoot = patch.path.length == 0 ? true : false;
 
-function apply_change(tree, patch, action)
-{
-    let parent = tree;
+  for (let i = 0; i < patch.path.length - 1; i++) {
+    parent = parent.children[patch.path[i]];
+  }
+  index = patch.path[(patch.path.length - 1)];
 
-    for (let i = 0; i < patch.path.length-1 ; i++)
-    {
-        parent = parent.children[patch.path[i]];
-    }
-    index = patch.path[patch.path.length - 1];
+  switch (action) {
+    case patchTypes.REPLACE:
+      if (isActionOnRoot)
+      {
+        parent = patch.value;
+      }
+      else {
+      parent.children[patch.path[index]] = patch.value;
+      }
+      break;
+    case patchTypes.ADD:
+      if (isActionOnRoot)
+      {
+        parent = patch.value;
+      }
+      else {
+      parent.children.push(patch.value);}
+      break;
+    case patchTypes.REMOVE:
+      if (isActionOnRoot)
+      {
+        parent = undefined;
+      }
+      else {
+      parent.children.splice(index);}
+      break;
+    case patchTypes.PROPS:
+      if (Object.keys(patch.set).length !== 0) {
+        for (const [key, value] of Object.entries(patch.set)) {
+          if (isActionOnRoot)
+            parent.props[key] = value;
+          else
+            parent.children[index].props[key] = value;
+        }
+      }
 
-    switch (action) {
-        case patchTypes.REPLACE:
-            parent.children[patch.path[index]] = patch.value;
-            break;
-        case patchTypes.ADD:
-            parent.children.push(patch.value);
-            break;
-        case patchTypes.REMOVE:
-            parent.children.splice(index);
-            break;
-
-
-    }
-    return parent
+      if (Object.keys(patch.remove).length !== 0) {
+        for (const [key, value] of Object.entries(patch.remove)) {
+          if (isActionOnRoot)
+            delete parent.props[key]
+          else
+            delete parent.children[index].props[key];
+        }
+      }
+  }
+  return parent;
 }
-
-
 
 out = h("div", { id: "greeting" }, [
   {
@@ -266,20 +311,29 @@ const tree6 = h("div", {}, [
   { tag: "span", props: {}, children: ["Hello", "/test"] },
 ]);
 
-const tree7 = h("div", {}, [
-  { tag: "span", props: { id: "heading1" }, children: [] },
+const tree7 = h("span", {}, [
+  { tag: "span", props: { id: "heading1", ref: "test" }, children: [] },
   { tag: "span", props: {}, children: [] },
 ]);
 
-const tree8 = h("div", {}, [
+const tree8 = h("span", { id: "h1" }, [
   { tag: "span", props: { id: "heading2", class: "S1" }, children: [] },
   { tag: "span", props: {}, children: [] },
 ]);
+
+let root = VirtualNodeToDom(tree7);
+app.appendChild(root);
+
 console.log(out);
 console.log(VirtualNodeToDom(out));
 
-patchess = diff(tree5, tree6);
+patchess = diff(tree7, tree8);
 console.log(patchess);
 
-new_tree = apply_patches(patches, tree5);
+new_tree = apply_patches(patches, tree7);
 console.log(new_tree);
+
+
+
+new_e = VirtualNodeToDom(tree7);
+console.log(new_e)
