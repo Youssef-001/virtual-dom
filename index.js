@@ -237,7 +237,13 @@ function apply_change(tree, patch, action) {
         parent = patch.value;
       }
       else {
-      parent.childNodes.appendChild(patch.value);}
+        new_value = undefined;
+        if (typeof patch.value === "object")
+          new_value = VirtualNodeToDom(patch.value)
+        else 
+          new_value = document.createTextNode(patch.value)
+
+      parent.appendChild(new_value);}
       break;
     case patchTypes.REMOVE:
       if (isActionOnRoot)
@@ -322,6 +328,7 @@ const tree7 = h("span", {}, [
 const tree8 = h("span", { id: "h1" }, [
   { tag: "span", props: { id: "heading2", class: "S1" }, children: [" span 3"] },
   { tag: "span", props: {}, children: [" span 4"] },
+  {tag: "h4", props: {}, children: ["hi"]}
 ]);
 
 
