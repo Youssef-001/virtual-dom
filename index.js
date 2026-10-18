@@ -142,7 +142,7 @@ function diff(oldTree, newTree, current_path = []) {
       ) {
         if (oldTreeChild != newTreeChild) {
           patches.push({
-            type: patchTypes.REPLACE,
+            type: patchTypes.TEXT,
             path: [...current_path],
             value: newTreeChild,
           });
@@ -185,16 +185,7 @@ function diff(oldTree, newTree, current_path = []) {
       current_path.pop();
       continue;
     } else if (oldTreeChild["tag"] === newTreeChild["tag"]) {
-      // array of props changes.
-      // let props_difference = props_diff(
-      //   oldTreeChild["props"],
-      //   newTreeChild["props"],
-      //   current_path,
-      // );
-      // if (props_difference !== undefined) {
-      //   patches.push(props_difference);
-      // }
-      // current_path.push(i)
+
       diff(oldTreeChild, newTreeChild, current_path);
       current_path.pop();
     }
@@ -216,7 +207,7 @@ function apply_change(tree, patch, action) {
   let isActionOnRoot = patch.path.length == 0 ? true : false;
 
   for (let i = 0; i < patch.path.length - 1; i++) {
-    parent = parent.cihldNodes[patch.path[i]];
+    parent = parent.childNodes[patch.path[i]];
   }
   index = patch.path[(patch.path.length - 1)];
 
@@ -227,7 +218,17 @@ function apply_change(tree, patch, action) {
         parent = patch.value;
       }
       else {
-      parent.childNodes[patch.path[index]] = patch.value;
+      parent.childNodes[index] = patch.value;
+      }
+      break;
+
+    case patchTypes.TEXT:
+      if (isActionOnRoot)
+      {
+        parent.nodeValue = patch.value;
+      }
+      else {
+        parent.childNodes[index].nodeValue = patch.value;
       }
       break;
     case patchTypes.ADD:
@@ -343,10 +344,10 @@ update(root, patches)
 // console.log(VirtualNodeToDom(out));
 
 
-new_tree = apply_patches(patches, tree7);
-console.log(new_tree);
+// new_tree = apply_patches(patches, tree7);
+// console.log(new_tree);
 
 
 
-new_e = VirtualNodeToDom(tree7);
-console.log(new_e)
+// new_e = VirtualNodeToDom(tree7);
+// console.log(new_e)
