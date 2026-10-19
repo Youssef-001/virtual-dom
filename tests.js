@@ -48,8 +48,15 @@ const tree7 = h("span", {}, [
 
 const tree8 = h("span", { }, [
   { tag: "span", props: { id: "heading2", class: "S1" }, children: [" span 3"] },
-  { tag: "div", props: {}, children: [" span 4", " span 5"] },
+  { tag: "div", props: {onClick: handleClick}, children: [" span 4", " span 5"] },
+  // {tag: "button", props: {onClick: handleClick}, children: ["click me"]}
 ]);
+
+function handleClick()
+{
+  console.log("Clicked!");
+}
+
 // Change these two trees to try a different patch scenario.
 const oldTree = tree7;
 const newTree = tree8;

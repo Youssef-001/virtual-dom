@@ -210,6 +210,7 @@ function apply_change(tree, patch, action) {
               let newNode =   typeof patch.value === "object"
     ? VirtualNodeToDom(patch.value)
     : document.createTextNode(patch.value);
+    patchEventListeners(newNode, patch)
       if (isActionOnRoot)
       {
         parent.replaceWith(newNode)
@@ -232,7 +233,7 @@ function apply_change(tree, patch, action) {
     case patchTypes.ADD:
       if (isActionOnRoot)
       {
-        parent = patch.value;
+        return VirtualNodeToDom(patch.value);
       }
       else {
         new_value = undefined;
@@ -240,12 +241,14 @@ function apply_change(tree, patch, action) {
           new_value = VirtualNodeToDom(patch.value)
         else 
           new_value = document.createTextNode(patch.value)
+        // binding event listeners
+        new_value = patchEventListeners(new_value, patch)
 
       parent.appendChild(new_value);}
       break;
     case patchTypes.REMOVE:
       if (isActionOnRoot)
-      {
+        {
         parent.remove();
         return undefined;
       }
@@ -275,3 +278,23 @@ function apply_change(tree, patch, action) {
   }
   return tree;
 }
+
+
+function patchEventListeners(element, patch)
+{
+  props = undefined;
+  if (patch.type === patchTypes.PROPS)
+    props = patch.set;
+  else 
+    props = patch.value.props;
+
+  for (const [key, value] of Object.entries(props)) {
+  if (key.startsWith("on") && typeof value === "function")
+  {
+    const eventName = key.slice(2).toLocaleLowerCase();
+    element.addEventListener(eventName, value);
+  }
+}
+return element;
+}
+
