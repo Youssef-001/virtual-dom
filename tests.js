@@ -43,18 +43,22 @@ const tree6 = h("div", {}, [
 
 const tree7 = h("span", {}, [
   { tag: "span", props: { id: "heading1", ref: "test" }, children: ["span 1"] },
-  { tag: "span", props: {}, children: [" span 2"] },
+  { tag: "button", props: { onMouseEnter: handleMouseHover}, children: [" span 2"] },
 ]);
 
 const tree8 = h("span", { }, [
   { tag: "span", props: { id: "heading2", class: "S1" }, children: [" span 3"] },
-  { tag: "div", props: {onClick: handleClick}, children: [" span 4", " span 5"] },
+  { tag: "button", props: {onClick: handleClick, }, children: ["span 1"] },
   // {tag: "button", props: {onClick: handleClick}, children: ["click me"]}
 ]);
 
 function handleClick()
 {
   console.log("Clicked!");
+}
+function handleMouseHover()
+{
+  console.log("Entered!");
 }
 
 // Change these two trees to try a different patch scenario.

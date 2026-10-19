@@ -24,7 +24,14 @@ function h(tag, props, children) {
 function VirtualNodeToDom(virtualNode) {
   let element = document.createElement(virtualNode["tag"]);
   for (const [key, value] of Object.entries(virtualNode["props"])) {
-    element[key] = value;
+    if (key.startsWith("on") && typeof value === "function") {
+      const eventName = key.slice(2).toLowerCase();
+      element.addEventListener(eventName, value);
+    }
+    else 
+    {
+      element[key] = value;
+    }
   }
 
   virtualNode.children.forEach((child) => {
@@ -180,7 +187,6 @@ function diff(oldTree, newTree, current_path = []) {
       current_path.pop();
       continue;
     } else if (oldTreeChild["tag"] === newTreeChild["tag"]) {
-
       diff(oldTreeChild, newTreeChild, current_path);
       current_path.pop();
     }
@@ -203,98 +209,79 @@ function apply_change(tree, patch, action) {
   for (let i = 0; i < patch.path.length - 1; i++) {
     parent = parent.childNodes[patch.path[i]];
   }
-  index = patch.path[(patch.path.length - 1)];
+  index = patch.path[patch.path.length - 1];
 
   switch (action) {
     case patchTypes.REPLACE:
-              let newNode =   typeof patch.value === "object"
-    ? VirtualNodeToDom(patch.value)
-    : document.createTextNode(patch.value);
-    patchEventListeners(newNode, patch)
-      if (isActionOnRoot)
-      {
-        parent.replaceWith(newNode)
+      let newNode =
+        typeof patch.value === "object"
+          ? VirtualNodeToDom(patch.value)
+          : document.createTextNode(patch.value);
+      if (isActionOnRoot) {
+        parent.replaceWith(newNode);
         return newNode;
-      }
-      else {
-      parent.childNodes[index].replaceWith(newNode)
+      } else {
+        parent.childNodes[index].replaceWith(newNode);
       }
       break;
 
     case patchTypes.TEXT:
-      if (isActionOnRoot)
-      {
+      if (isActionOnRoot) {
         parent.nodeValue = patch.value;
-      }
-      else {
+      } else {
         parent.childNodes[index].nodeValue = patch.value;
       }
       break;
     case patchTypes.ADD:
-      if (isActionOnRoot)
-      {
+      if (isActionOnRoot) {
         return VirtualNodeToDom(patch.value);
-      }
-      else {
+      } else {
         new_value = undefined;
         if (typeof patch.value === "object")
-          new_value = VirtualNodeToDom(patch.value)
-        else 
-          new_value = document.createTextNode(patch.value)
+          new_value = VirtualNodeToDom(patch.value);
+        else new_value = document.createTextNode(patch.value);
         // binding event listeners
-        new_value = patchEventListeners(new_value, patch)
+        // new_value = patchEventListeners(new_value, patch)
 
-      parent.appendChild(new_value);}
+        parent.appendChild(new_value);
+      }
       break;
     case patchTypes.REMOVE:
-      if (isActionOnRoot)
-        {
+      if (isActionOnRoot) {
         parent.remove();
         return undefined;
+      } else {
+        parent.childNodes[index].remove();
       }
-      else {
-      parent.childNodes[index].remove();
-    }
       break;
     case patchTypes.PROPS:
+      node = isActionOnRoot ? parent : parent.childNodes[index]
+      patchEventListeners(node, patch)
       if (Object.keys(patch.set).length !== 0) {
         for (const [key, value] of Object.entries(patch.set)) {
-          if (isActionOnRoot)
-          parent.setAttribute(key, value)
-          else
-            parent.childNodes[index].setAttribute(key, value);
+          node.setAttribute(key, value)
         }
       }
 
       if (Object.keys(patch.remove).length !== 0) {
         for (const [key, value] of Object.entries(patch.remove)) {
-          if (isActionOnRoot)
-            parent.removeAttribute(key)
-
-          else
-            parent.childNodes[index].removeAttribute(key);
+          node.removeAttribute(key);
         }
       }
   }
   return tree;
 }
 
-
-function patchEventListeners(element, patch)
-{
+function patchEventListeners(element, patch) {
   props = undefined;
-  if (patch.type === patchTypes.PROPS)
-    props = patch.set;
-  else 
-    props = patch.value.props;
+  if (patch.type === patchTypes.PROPS) props = patch.set;
+  else props = patch.value.props;
 
   for (const [key, value] of Object.entries(props)) {
-  if (key.startsWith("on") && typeof value === "function")
-  {
-    const eventName = key.slice(2).toLocaleLowerCase();
-    element.addEventListener(eventName, value);
+    if (key.startsWith("on") && typeof value === "function") {
+      const eventName = key.slice(2).toLocaleLowerCase();
+      element.addEventListener(eventName, value);
+    }
   }
+  return element;
 }
-return element;
-}
-
