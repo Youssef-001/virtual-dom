@@ -215,7 +215,8 @@ function apply_change(tree, patch, action) {
     case patchTypes.REPLACE:
       if (isActionOnRoot)
       {
-        parent = patch.value;
+        newNode = VirtualNodeToDom(patch.value)
+        parent.replaceWith(newNode)
       }
       else {
       parent.childNodes[index] = patch.value;
@@ -325,10 +326,9 @@ const tree7 = h("span", {}, [
   { tag: "span", props: {}, children: [" span 2"] },
 ]);
 
-const tree8 = h("span", { id: "h1" }, [
+const tree8 = h("div", { id: "h1" }, [
   { tag: "span", props: { id: "heading2", class: "S1" }, children: [" span 3"] },
-  { tag: "span", props: {}, children: [" span 4"] },
-  {tag: "h4", props: {}, children: ["hi"]}
+  { tag: "span", props: {}, children: [" span 4", " span 5"] },
 ]);
 
 
