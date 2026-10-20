@@ -54,7 +54,6 @@ let patchTypes = {
 };
 
 function props_diff(old_props, new_props, path) {
-  let patches = [];
   let remove_props = {};
   let set_props = {};
 
@@ -62,6 +61,8 @@ function props_diff(old_props, new_props, path) {
     if (Object.hasOwn(old_props, key)) {
       if (old_props[key] != new_props[key]) {
         set_props[key] = value;
+        if (key.startsWith("on") && typeof old_props[key] === 'function')
+          remove_props[key] = old_props[key]
       }
     } else {
       set_props[key] = value;
