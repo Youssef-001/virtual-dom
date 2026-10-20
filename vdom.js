@@ -27,9 +27,7 @@ function VirtualNodeToDom(virtualNode) {
     if (key.startsWith("on") && typeof value === "function") {
       const eventName = key.slice(2).toLowerCase();
       element.addEventListener(eventName, value);
-    }
-    else 
-    {
+    } else {
       element[key] = value;
     }
   }
@@ -88,9 +86,8 @@ function props_diff(old_props, new_props, path) {
     };
   } else return undefined;
 }
-let patches = [];
 
-function diff(oldTree, newTree, current_path = []) {
+function diff(oldTree, newTree, current_path = [], patches = []) {
   if (oldTree === undefined && newTree !== undefined) {
     patches.push({ type: patchTypes.ADD, path: [0], value: newTree });
   } else if (oldTree !== undefined && newTree === undefined) {
@@ -107,6 +104,8 @@ function diff(oldTree, newTree, current_path = []) {
     return patches;
   }
 
+
+
   let props_difference = props_diff(
     oldTree["props"],
     newTree["props"],
@@ -122,6 +121,8 @@ function diff(oldTree, newTree, current_path = []) {
     let oldTreeChild = oldTree["children"][i];
     let newTreeChild = newTree["children"][i];
     current_path.push(i);
+      if (typeof oldTreeChild === 'number') oldTreeChild = oldTreeChild.toString();
+  if (typeof newTreeChild === 'number') newTreeChild = newTreeChild.toString();
 
     if (oldTreeChild !== undefined && newTreeChild !== undefined) {
       if (
@@ -187,7 +188,7 @@ function diff(oldTree, newTree, current_path = []) {
       current_path.pop();
       continue;
     } else if (oldTreeChild["tag"] === newTreeChild["tag"]) {
-      diff(oldTreeChild, newTreeChild, current_path);
+      diff(oldTreeChild, newTreeChild, current_path, patches);
       current_path.pop();
     }
   }
@@ -240,8 +241,6 @@ function apply_change(tree, patch, action) {
         if (typeof patch.value === "object")
           new_value = VirtualNodeToDom(patch.value);
         else new_value = document.createTextNode(patch.value);
-        // binding event listeners
-        // new_value = patchEventListeners(new_value, patch)
 
         parent.appendChild(new_value);
       }
@@ -255,11 +254,11 @@ function apply_change(tree, patch, action) {
       }
       break;
     case patchTypes.PROPS:
-      node = isActionOnRoot ? parent : parent.childNodes[index]
-      patchEventListeners(node, patch)
+      node = isActionOnRoot ? parent : parent.childNodes[index];
+      patchEventListeners(node, patch);
       if (Object.keys(patch.set).length !== 0) {
         for (const [key, value] of Object.entries(patch.set)) {
-          node.setAttribute(key, value)
+          node.setAttribute(key, value);
         }
       }
 
@@ -289,9 +288,7 @@ function patchEventListeners(element, patch) {
       const eventName = key.slice(2).toLowerCase();
       element.removeEventListener(eventName, value);
     }
-
   }
-
 
   return element;
 }
