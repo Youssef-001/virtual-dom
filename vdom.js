@@ -279,9 +279,19 @@ function patchEventListeners(element, patch) {
 
   for (const [key, value] of Object.entries(props)) {
     if (key.startsWith("on") && typeof value === "function") {
-      const eventName = key.slice(2).toLocaleLowerCase();
+      const eventName = key.slice(2).toLowerCase();
       element.addEventListener(eventName, value);
     }
   }
+
+  for (const [key, value] of Object.entries(patch.remove)) {
+    if (key.startsWith("on") && typeof value === "function") {
+      const eventName = key.slice(2).toLowerCase();
+      element.removeEventListener(eventName, value);
+    }
+
+  }
+
+
   return element;
 }
