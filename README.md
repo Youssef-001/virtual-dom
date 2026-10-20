@@ -62,18 +62,6 @@ Open `tests.html` and the browser's developer console. In `tests.js`, change the
 
 These are manual examples, not an automated test suite. The page also contains a static button and heading outside the rendered test tree.
 
-## Known limitations
-
-This is a learning project with a deliberately small API and unresolved edge cases:
-
-- Children are compared by position. Keyed list reconciliation and node moves are not implemented.
-- Removing multiple siblings can shift indices and cause later patches to target the wrong node.
-- Adding or removing an entire tree through `diff()` is incomplete; missing roots can cause errors, and root mounting requires a container.
-- Event props are still passed to the attribute-update loop after listener reconciliation; they should be handled separately from regular attributes.
-- Initial rendering assigns DOM properties, while prop patches update attributes. Some props, including classes, form values, and booleans, need consistent handling.
-- Pass a props object and a children array to `h()`. Conditional children such as `null`, nested child arrays, components, lifecycle hooks, and update batching are not supported.
-- Scripts currently use browser globals and are not packaged as modules.
-
 ## Inspiration
 
 Built as a learning exercise based on [Build Your Own Virtual DOM](https://resumax.ai/projects/virtual-dom-from-scratch).
